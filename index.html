@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACTORY-13 | TERMINAL</title>
+    <style>
+        :root {
+            --term-green: #00ff41;
+            --term-amber: #ffb000;
+            --bg-deep: #050505;
+            --panel-bg: #0a0a0a;
+            --border-muted: #1a1a1a;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--term-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow-x: hidden;
+            text-transform: uppercase;
+        }
+
+        /* CRT Scanline Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Flicker Effect */
+        @keyframes flicker {
+            0% {
+                opacity: 0.97;
+            }
+
+            5% {
+                opacity: 0.95;
+            }
+
+            10% {
+                opacity: 0.9;
+            }
+
+            15% {
+                opacity: 0.95;
+            }
+
+            20% {
+                opacity: 0.98;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .crt-container {
+            animation: flicker 0.15s infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 40px 20px;
+            border-bottom: 2px solid var(--term-green);
+            margin-bottom: 30px;
+            background: var(--panel-bg);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            letter-spacing: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px var(--term-green);
+        }
+
+        .status-bar {
+            background: var(--term-green);
+            color: #000;
+            padding: 5px 20px;
+            font-weight: bold;
+            font-size: 0.8em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .item {
+            background: var(--panel-bg);
+            padding: 20px;
+            border: 1px solid var(--term-green);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .item:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+            border-color: #fff;
+        }
+
+        .item::before {
+            content: "[LOG ENTRY]";
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--bg-deep);
+            padding: 0 10px;
+            font-size: 0.7em;
+            color: var(--term-amber);
+        }
+
+        img {
+            width: 100%;
+            border: 1px solid var(--border-muted);
+            filter: sepia(0.3) contrast(1.1) brightness(0.9);
+            transition: filter 0.3s;
+        }
+
+        .item:hover img {
+            filter: none;
+        }
+
+        .title {
+            font-size: 0.85em;
+            margin-top: 20px;
+            color: var(--term-amber);
+            border-top: 1px dashed var(--term-green);
+            padding-top: 15px;
+            letter-spacing: 2px;
+        }
+
+        footer {
+            padding: 60px 40px;
+            color: #444;
+            font-size: 0.7em;
+            border-top: 1px solid var(--border-muted);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--term-green);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="crt-container">
+        <div class="status-bar">
+            <span>SYS_VERSION: 1.3.0_REV_B</span>
+            <span>Uptime: ACTIVE</span>
+            <span>Location: SECTOR-07</span>
+        </div>
+        <header>
+            <h1>FACTORY-13</h1>
+            <p style="color: var(--term-amber); letter-spacing: 3px; font-size: 0.9em;">Autonomous Generative Production
+                Log</p>
+        </header>
+
+        <div id="gallery" class="gallery"></div>
+
+        <footer>
+            [SYSTEM HALT REACHED] // ALL OUTPUTS ARCHIVED // ENCRYPTED VIA POLLINATIONS_AI_V2
+        </footer>
+    </div>
+
+    <script>
+        const USERNAME = 'kliffdafunkfacekilla';
+        const REPO = 'dailyscriptart';
+        const FOLDER = 'Daily_Finished';
+
+        fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/${FOLDER}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('gallery');
+                if (!Array.isArray(data)) {
+                    container.innerHTML = "<div style='color: var(--term-amber)'>[WARN] No production data detected in master branch.</div>";
+                    return;
+                }
+                data.reverse().forEach(file => {
+                    if (file.name.endsWith('.png')) {
+                        const item = document.createElement('div');
+                        item.className = 'item';
+                        const titleClean = file.name.replace('.png', '').replace(/-/g, ' ');
+                        item.innerHTML = `
+                        <img src="${file.path}" alt="${titleClean}">
+                        <div class="title">&gt; ID: ${titleClean}</div>
+                        <div style="font-size: 0.6em; color: #555; margin-top: 5px;">TIMESTAMP: ${new Date().toISOString().split('T')[0]}</div>
+                    `;
+                        container.appendChild(item);
+                    }
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('gallery').innerHTML = "<div style='color: red'>[FATAL] DIRECTORY_ACCESS_DENIED // RETRYING...</div>";
+            });
+    </script>
+</body>
+
+</html>

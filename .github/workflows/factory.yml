@@ -1,0 +1,45 @@
+name: Super Factory Cycle
+on:
+  schedule:
+    - cron: '0 * * * *' # Hourly
+  workflow_dispatch:
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install
+        run: pip install requests Pillow atproto mastodon.py
+      
+      - name: Hourly Production
+        run: python Factory_13.py
+        
+      - name: Daily Composite (At Midnight)
+        if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+        run: python daily_assembly.py
+
+      - name: Social Posting
+        if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+        env:
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
+        run: python social_post.py
+
+      - name: Weekly Video (Sunday Midnight)
+        if: github.event.schedule == '0 0 * * 0'
+        run: python weekly_timelapse.py
+
+      - name: Commit Progress
+        run: |
+          git config --local user.name "Factory-Bot"
+          git add .
+          git commit -m "🏭 Production Update" || exit 0
+          git push
